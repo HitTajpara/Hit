@@ -381,7 +381,16 @@
     </script>
 </head>
 
-<body class="bg-black text-white min-h-screen scroll-smooth bg-pattern grid-pattern">
+<body class="bg-black text-white min-h-screen scroll-smooth">
+    <!-- Matrix Rain Background -->
+    <canvas id="matrixCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"></canvas>
+    
+    <!-- Mouse Effect Canvas -->
+    <canvas id="mouseCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;"></canvas>
+    
+    <!-- Main Content Container with backdrop blur -->
+    <div class="relative z-10" style="backdrop-filter: blur(1px);">
+    
     <!-- Floating Background Shapes -->
     <div class="floating-shapes">
         <div class="shape w-20 h-20 border border-cyan-500 rounded-full"></div>
@@ -562,13 +571,13 @@
                         <div class="space-y-4">
                             <div class="p-4 card-hover rounded-lg">
                                 <h4 class="font-semibold text-cyan-300">Diploma - Computer Engineering</h4>
-                                <p class="text-gray-400">Prime College Of Diploma | Jun 2025 | Navsari</p>
+                                <p class="text-gray-400">Prime College Of Diploma | Jun 2025 | India</p>
                             </div>
                             <div class="p-4 card-hover rounded-lg">
                                 <h4 class="font-semibold text-cyan-300">Bachelor of Technology - Computer Engineering
                                 </h4>
                                 <p class="text-gray-400">Swarrnim Startup & Innovation University
-                                    | Jun 2028 | Gandhinagar, India</p>
+                                    | Jun 2028 | India</p>
                             </div>
                             <!-- <div class="p-4 card-hover rounded-lg">
                                 <h4 class="font-semibold text-cyan-300">CompTIA Pentest+</h4>
@@ -1078,8 +1087,172 @@
             }
         </style>
     </div>
+    </div>
 
     <script>
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Matrix characters (only English letters and numbers)
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz[]{}()<>_$#@%*!';
+        const charArray = characters.split('');
+
+        const fontSize = 16; // Slightly larger font size
+        const columns = Math.floor(canvas.width / fontSize);
+        const raindrops = new Array(columns).fill(1);
+        
+        // Main animation function
+        function drawMatrix() {
+            // Semi-transparent fade effect
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Slightly stronger fade
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Set text properties
+            ctx.fillStyle = '#0891b2'; // Cyan color matching your theme
+            ctx.font = fontSize + 'px monospace';
+            
+            // Draw characters
+            for(let i = 0; i < raindrops.length; i++) {
+                // Get random character
+                const char = charArray[Math.floor(Math.random() * charArray.length)];
+                
+                // Calculate position
+                const x = i * fontSize;
+                const y = raindrops[i] * fontSize;
+                
+                // Create gradient effect
+                const gradient = ctx.createLinearGradient(x, y - fontSize * 4, x, y);
+                gradient.addColorStop(0, '#06b6d4');  // Brighter cyan at top
+                gradient.addColorStop(1, '#0891b2');  // Darker cyan at bottom
+                ctx.fillStyle = gradient;
+                
+                // Draw the character
+                ctx.fillText(char, x, y);
+                
+                // Reset or move raindrop
+                if(y > canvas.height && Math.random() > 0.975) {
+                    raindrops[i] = 0;
+                } else {
+                    raindrops[i]++;
+                }
+            }
+        }
+
+        // Run animation
+        setInterval(drawMatrix, 40); // Slightly faster update rate
+
+        // Mouse effect
+        const mouseCanvas = document.getElementById('mouseCanvas');
+        const mouseCtx = mouseCanvas.getContext('2d');
+
+        // Set mouse canvas size
+        function resizeMouseCanvas() {
+            mouseCanvas.width = window.innerWidth;
+            mouseCanvas.height = window.innerHeight;
+        }
+        resizeMouseCanvas();
+        window.addEventListener('resize', resizeMouseCanvas);
+
+        // Ripple effect system
+        const ripples = [];
+        let mouseX = 0;
+        let mouseY = 0;
+        let lastMoveTime = 0;
+
+        class Ripple {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 0;
+                this.maxRadius = 100;
+                this.lineWidth = 2;
+                this.speed = 5;
+                this.alpha = 1;
+            }
+
+            update() {
+                this.radius += this.speed;
+                this.alpha = 1 - (this.radius / this.maxRadius);
+                this.lineWidth = 2 * (1 - (this.radius / this.maxRadius));
+                return this.radius <= this.maxRadius;
+            }
+
+            draw() {
+                mouseCtx.beginPath();
+                mouseCtx.strokeStyle = `rgba(6, 182, 212, ${this.alpha})`;
+                mouseCtx.lineWidth = this.lineWidth;
+                mouseCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                mouseCtx.stroke();
+
+                // Digital effect
+                const segments = 8;
+                for (let i = 0; i < segments; i++) {
+                    const angle = (i / segments) * Math.PI * 2;
+                    const glitchAmount = Math.random() * 5;
+                    const x = this.x + Math.cos(angle) * (this.radius + glitchAmount);
+                    const y = this.y + Math.sin(angle) * (this.radius + glitchAmount);
+                    
+                    mouseCtx.beginPath();
+                    mouseCtx.strokeStyle = `rgba(6, 182, 212, ${this.alpha * 0.5})`;
+                    mouseCtx.moveTo(x - 5, y);
+                    mouseCtx.lineTo(x + 5, y);
+                    mouseCtx.stroke();
+                }
+            }
+        }
+
+        // Track mouse movement
+        document.addEventListener('mousemove', (e) => {
+            const currentTime = Date.now();
+            if (currentTime - lastMoveTime > 50) { // Limit ripple creation
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                ripples.push(new Ripple(mouseX, mouseY));
+                lastMoveTime = currentTime;
+
+                // Digital distortion effect
+                mouseCtx.fillStyle = `rgba(6, 182, 212, 0.2)`;
+                mouseCtx.fillRect(mouseX - 10, mouseY - 10, 20, 20);
+            }
+        });
+
+        // Click effect
+        document.addEventListener('click', (e) => {
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    ripples.push(new Ripple(e.clientX, e.clientY));
+                }, i * 100);
+            }
+        });
+
+        // Animate ripples
+        function animateRipples() {
+            mouseCtx.clearRect(0, 0, mouseCanvas.width, mouseCanvas.height);
+
+            // Update and draw ripples
+            ripples.forEach((ripple, index) => {
+                if (!ripple.update()) {
+                    ripples.splice(index, 1);
+                } else {
+                    ripple.draw();
+                }
+            });
+
+            requestAnimationFrame(animateRipples);
+        }
+
+        // Start ripple animation
+        animateRipples();
+
         // Typing animation
         const typingText = document.getElementById('typing-text');
         const texts = [
