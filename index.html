@@ -1319,11 +1319,22 @@
             const rect = contactSection.getBoundingClientRect();
             const contactTop = window.scrollY + rect.top;
             const contactHeight = rect.height;
-            const contactCenter = contactTop + contactHeight / 2;
+            
+            // Check if mobile device
+            const isMobile = window.innerWidth < 768; // md breakpoint
+            
+            let popupTop;
+            if (isMobile) {
+                // On mobile, position popup towards the bottom of form section (70% down)
+                popupTop = contactTop + (contactHeight * 0.70);
+            } else {
+                // On tablet/desktop, center in contact section
+                popupTop = contactTop + contactHeight / 2;
+            }
             
             // Ensure popup stays within contact section and is visible
             popup.style.position = 'fixed';
-            popup.style.top = contactCenter + 'px';
+            popup.style.top = popupTop + 'px';
             popup.style.left = '50%';
             popup.style.transform = 'translate(-50%, -50%)';
             popup.style.width = '100%';
