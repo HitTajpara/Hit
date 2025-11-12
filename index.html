@@ -992,11 +992,12 @@
             <i class="fas fa-arrow-up"></i>
         </button>
 
-        <!-- Custom Popup -->
-        <div id="custom-popup" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <!-- Custom Popup - Centered in Contact Section -->
+        <div id="custom-popup" class="fixed inset-0 flex items-center justify-center z-50 hidden popup-container" style="display: none; top: auto; left: auto; right: auto; bottom: auto;">
             <div class="absolute inset-0 bg-black bg-opacity-80 backdrop-blur-sm"></div>
-            <div
-                class="relative bg-black/90 p-8 rounded-sm shadow-[0_0_20px_rgba(6,182,212,0.3)] border border-cyan-500/30 transform transition-all duration-300 scale-95 opacity-0 max-w-md w-full mx-4 overflow-hidden">
+            <div id="popup-card"
+                class="relative bg-black/90 p-12 rounded-sm shadow-[0_0_20px_rgba(6,182,212,0.3)] border border-cyan-500/30 transform transition-all duration-300 max-w-2xl w-full mx-4 overflow-hidden"
+                style="transform: scale(0.95); opacity: 0;">
                 <div class="text-center relative">
                     <!-- Glitch Effect Overlay -->
                     <div class="absolute inset-0 glitch-overlay"></div>
@@ -1004,14 +1005,13 @@
                     <!-- Scanner Line Effect -->
                     <div class="absolute left-0 w-full h-px bg-cyan-400/50 scanner-line"></div>
 
-                    <div class="mb-4 text-cyan-400 relative">
-                        <i class="fas fa-terminal text-4xl"></i>
+                    <div class="mb-6 text-cyan-400 relative">
+                        <i class="fas fa-terminal text-6xl"></i>
                     </div>
-                    <div class="flex flex-col items-center space-y-2 relative terminal-text">
-                        <h3 class="text-xl font-mono mb-2 text-cyan-400 typewriter" id="popup-title">>
-                            TRANSMISSION_RECEIVED</h3>
-                        <p class="text-cyan-300/80 font-mono" id="popup-message">> MESSAGE_STATUS: DELIVERED</p>
-                        <p class="text-cyan-300/60 font-mono text-sm">> ENCRYPTED_CHANNEL: SECURE</p>
+                    <div class="flex flex-col items-center space-y-3 relative terminal-text">
+                        <h3 class="text-4xl font-mono mb-2 text-cyan-400 typewriter" id="popup-title">> TRANSMISSION_RECEIVED</h3>
+                        <p class="text-3xl text-cyan-300/80 font-mono" id="popup-message">> MESSAGE_STATUS: DELIVERED</p>
+                        <p class="text-xl text-cyan-300/60 font-mono">> ENCRYPTED_CHANNEL: SECURE</p>
                     </div>
                 </div>
             </div>
@@ -1310,30 +1310,101 @@
         });
 
         // Custom popup functions
+        function positionPopupInContact() {
+            const popup = document.getElementById('custom-popup');
+            const contactSection = document.getElementById('contact');
+            
+            if (!contactSection) return;
+            
+            const rect = contactSection.getBoundingClientRect();
+            const contactCenter = window.scrollY + rect.top + rect.height / 2;
+            
+            popup.style.top = contactCenter + 'px';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.position = 'fixed';
+        }
+
+        function playBoomSound() {
+            // Create a hacker-style alert sound using Web Audio API
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const now = audioContext.currentTime;
+            
+            // First beep - high frequency alert
+            const osc1 = audioContext.createOscillator();
+            const osc2 = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            // High frequency beep
+            osc1.frequency.setValueAtTime(800, now);
+            osc1.frequency.setValueAtTime(600, now + 0.1);
+            
+            // Lower frequency layer for "hacker" feel
+            osc2.frequency.setValueAtTime(1200, now);
+            osc2.frequency.setValueAtTime(900, now + 0.1);
+            
+            // High volume
+            gain.gain.setValueAtTime(0.8, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            
+            osc1.start(now);
+            osc1.stop(now + 0.3);
+            
+            osc2.start(now);
+            osc2.stop(now + 0.3);
+            
+            // Second beep for extra "hack" effect
+            const osc3 = audioContext.createOscillator();
+            const gain2 = audioContext.createGain();
+            
+            osc3.connect(gain2);
+            gain2.connect(audioContext.destination);
+            
+            osc3.frequency.setValueAtTime(400, now + 0.35);
+            osc3.frequency.setValueAtTime(250, now + 0.5);
+            
+            gain2.gain.setValueAtTime(0.7, now + 0.35);
+            gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            
+            osc3.start(now + 0.35);
+            osc3.stop(now + 0.5);
+        }
+
         function showPopup(title, message, isError = false) {
             const popup = document.getElementById('custom-popup');
-            const popupContent = popup.querySelector('.relative');
+            const popupCard = document.getElementById('popup-card');
             const popupTitle = document.getElementById('popup-title');
             const popupMessage = document.getElementById('popup-message');
+
+            // Play boom sound effect
+            playBoomSound();
 
             if (isError) {
                 popupTitle.textContent = '> ERROR_DETECTED';
                 popupMessage.textContent = '> MESSAGE_STATUS: FAILED';
                 popupTitle.classList.add('text-red-400');
-                popupContent.classList.add('border-red-500/30');
+                popupCard.classList.add('border-red-500/30');
                 popup.querySelector('.fas').classList.add('fa-exclamation-triangle');
             } else {
                 popupTitle.textContent = '> TRANSMISSION_RECEIVED';
                 popupMessage.textContent = '> MESSAGE_STATUS: DELIVERED';
                 popupTitle.classList.remove('text-red-400');
-                popupContent.classList.remove('border-red-500/30');
+                popupCard.classList.remove('border-red-500/30');
                 popup.querySelector('.fas').classList.add('fa-terminal');
             }
 
-            popup.classList.remove('hidden');
+            // Position popup in contact section
+            positionPopupInContact();
+
+            // Show popup
+            popup.style.display = 'flex';
             setTimeout(() => {
-                popupContent.classList.remove('scale-95', 'opacity-0');
-                popupContent.classList.add('scale-100', 'opacity-100');
+                popupCard.style.transform = 'scale(1)';
+                popupCard.style.opacity = '1';
             }, 10);
 
             // Automatically close popup after 5 seconds
@@ -1344,13 +1415,13 @@
 
         function closePopup() {
             const popup = document.getElementById('custom-popup');
-            const popupContent = popup.querySelector('.relative');
+            const popupCard = document.getElementById('popup-card');
 
-            popupContent.classList.remove('scale-100', 'opacity-100');
-            popupContent.classList.add('scale-95', 'opacity-0');
+            popupCard.style.transform = 'scale(0.95)';
+            popupCard.style.opacity = '0';
 
             setTimeout(() => {
-                popup.classList.add('hidden');
+                popup.style.display = 'none';
             }, 300);
         }
 
