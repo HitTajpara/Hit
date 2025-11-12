@@ -996,7 +996,7 @@
         <div id="custom-popup" class="fixed inset-0 flex items-center justify-center z-50 hidden popup-container" style="display: none; top: auto; left: auto; right: auto; bottom: auto;">
             <div class="absolute inset-0 bg-black bg-opacity-80 backdrop-blur-sm"></div>
             <div id="popup-card"
-                class="relative bg-black/90 p-12 rounded-sm shadow-[0_0_20px_rgba(6,182,212,0.3)] border border-cyan-500/30 transform transition-all duration-300 max-w-2xl w-full mx-4 overflow-hidden"
+                class="relative bg-black/90 p-6 sm:p-8 md:p-12 rounded-sm shadow-[0_0_20px_rgba(6,182,212,0.3)] border border-cyan-500/30 transform transition-all duration-300 w-full max-w-sm sm:max-w-md md:max-w-2xl mx-2 sm:mx-4 overflow-hidden"
                 style="transform: scale(0.95); opacity: 0;">
                 <div class="text-center relative">
                     <!-- Glitch Effect Overlay -->
@@ -1005,13 +1005,13 @@
                     <!-- Scanner Line Effect -->
                     <div class="absolute left-0 w-full h-px bg-cyan-400/50 scanner-line"></div>
 
-                    <div class="mb-6 text-cyan-400 relative">
-                        <i class="fas fa-terminal text-6xl"></i>
+                    <div class="mb-4 sm:mb-5 md:mb-6 text-cyan-400 relative">
+                        <i class="fas fa-terminal text-3xl sm:text-4xl md:text-6xl"></i>
                     </div>
-                    <div class="flex flex-col items-center space-y-3 relative terminal-text">
-                        <h3 class="text-4xl font-mono mb-2 text-cyan-400 typewriter" id="popup-title">> TRANSMISSION_RECEIVED</h3>
-                        <p class="text-3xl text-cyan-300/80 font-mono" id="popup-message">> MESSAGE_STATUS: DELIVERED</p>
-                        <p class="text-xl text-cyan-300/60 font-mono">> ENCRYPTED_CHANNEL: SECURE</p>
+                    <div class="flex flex-col items-center space-y-2 sm:space-y-3 md:space-y-3 relative terminal-text">
+                        <h3 class="text-xl sm:text-2xl md:text-4xl font-mono mb-1 sm:mb-2 md:mb-2 text-cyan-400 typewriter" id="popup-title">> TRANSMISSION_RECEIVED</h3>
+                        <p class="text-lg sm:text-xl md:text-3xl text-cyan-300/80 font-mono" id="popup-message">> MESSAGE_STATUS: DELIVERED</p>
+                        <p class="text-sm sm:text-base md:text-xl text-cyan-300/60 font-mono">> ENCRYPTED_CHANNEL: SECURE</p>
                     </div>
                 </div>
             </div>
@@ -1317,12 +1317,40 @@
             if (!contactSection) return;
             
             const rect = contactSection.getBoundingClientRect();
-            const contactCenter = window.scrollY + rect.top + rect.height / 2;
+            const contactTop = window.scrollY + rect.top;
+            const contactHeight = rect.height;
+            const contactCenter = contactTop + contactHeight / 2;
             
+            // Ensure popup stays within contact section and is visible
+            popup.style.position = 'fixed';
             popup.style.top = contactCenter + 'px';
             popup.style.left = '50%';
             popup.style.transform = 'translate(-50%, -50%)';
-            popup.style.position = 'fixed';
+            popup.style.width = '100%';
+            popup.style.pointerEvents = 'none'; // Allow scrolling through backdrop
+            
+            // Make card interactive again
+            const popupCard = document.getElementById('popup-card');
+            if (popupCard) {
+                popupCard.style.pointerEvents = 'auto';
+            }
+        }
+
+        // Update positioning on scroll and resize
+        function setupPopupPositioning() {
+            window.addEventListener('scroll', () => {
+                const popup = document.getElementById('custom-popup');
+                if (popup && popup.style.display === 'flex') {
+                    positionPopupInContact();
+                }
+            });
+            
+            window.addEventListener('resize', () => {
+                const popup = document.getElementById('custom-popup');
+                if (popup && popup.style.display === 'flex') {
+                    positionPopupInContact();
+                }
+            });
         }
 
         function playBoomSound() {
@@ -1465,6 +1493,9 @@
 
         // Initialize typing animation
         typeWriter();
+
+        // Initialize popup positioning for responsive behavior
+        setupPopupPositioning();
     </script>
 </body>
 
